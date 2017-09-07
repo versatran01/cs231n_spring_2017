@@ -73,20 +73,15 @@ class TwoLayerNet(object):
 
         # Compute the forward pass
         scores = None
+        #######################################################################
         # TODO: Perform the forward pass, computing the class scores for the
         # input.  Store the result in the scores variable, which should be an
         # array of shape (N, C).
+        #######################################################################
 
-        # X  is NxD
-        # W1 is DxH
-        # b1 is 1xH
-        # X*W1 is NxH
-        z1 = np.dot(X, W1) + b1  # this is NxH
-        a1 = np.maximum(0, z1)
-        # z1 is NxH
-        # W2 is HxC
-        # b2 is 1xC
-        z2 = np.dot(a1, W2) + b2
+        z1 = np.dot(X, W1) + b1  # NxD * DxH + 1xH = NxH
+        a1 = np.maximum(0, z1)  # NxH
+        z2 = np.dot(a1, W2) + b2  # NxH * HxC + 1xC = NxC
         scores = z2
 
         # If the targets are not given then jump out, we're done
@@ -96,42 +91,69 @@ class TwoLayerNet(object):
         # Compute the loss
         loss = None
 
+        #######################################################################
         # TODO: Finish the forward pass, and compute the loss. This should
         # include both the data loss and L2 regularization for W1 and W2. Store
         # the result in the variable loss, which should be a scalar. Use the
         # Softmax classifier loss.
-        pass
+        #######################################################################
+        F = scores - np.amax(scores, axis=1, keepdims=True)
+        E = np.exp(F)  # NxC
+        S = np.sum(E, axis=1, keepdims=True)  # 1xN
+        P = np.divide(E, S)  # NxC
+
+        loss = np.sum(-np.log(P[np.arange(N), y]))
+
+        loss /= N
+        loss += 0.5 * reg * (np.sum(W1 * W1) + np.sum(W2 * W2))
 
         # Backward pass: compute gradients
         grads = {}
-        #############################################################################
-        # TODO: Compute the backward pass, computing the derivatives of the weights #
-        # and biases. Store the results in the grads dictionary. For example,       #
-        # grads['W1'] should store the gradient on W1, and be a matrix of same size #
-        #############################################################################
-        pass
-        #############################################################################
-        #                              END OF YOUR CODE                             #
-        #############################################################################
+        #######################################################################
+        # TODO: Compute the backward pass, computing the derivatives of the
+        # weights and biases. Store the results in the grads dictionary.
+        # For example, grads['W1'] should store the gradient on W1, and be a
+        # matrix of same size
+        #######################################################################
+        # backprop P = softmax(z2)
+        dz2 = P.copy()
+        dz2[np.arange(N), y] -= 1
+        dz2 /= N
+
+        # backprop z2 = a1 * W2 + b2
+        dW2 = np.dot(a1.T, dz2) + reg * W2  # (HxN + NxC) + HxC = HxC
+        db2 = np.sum(dz2, axis=0)  # 1xC
+        da1 = np.dot(dz2, W2.T)  # NxC * CxH = NxH
+        grads['W2'] = dW2
+        grads['b2'] = db2
+
+        # backprop a1 = max(0, z1)
+        dz1 = (a1 > 0) * da1  # NxH .* NxH = NxH
+
+        # backprop z1 = X * W1 + b1
+        dW1 = np.dot(X.T, dz1) + reg * W1
+        db1 = np.sum(dz1, axis=0)
+
+        grads['W1'] = dW1
+        grads['b1'] = db1
 
         return loss, grads
 
-    def train(self, X, y, X_val, y_val,
-              learning_rate=1e-3, learning_rate_decay=0.95,
-              reg=5e-6, num_iters=100,
-              batch_size=200, verbose=False):
+    def train(self, X, y, X_val, y_val, learning_rate=1e-3,
+              learning_rate_decay=0.95, reg=5e-6, num_iters=100, batch_size=200,
+              verbose=False):
         """
         Train this neural network using stochastic gradient descent.
 
         Inputs:
         - X: A numpy array of shape (N, D) giving training data.
-        - y: A numpy array f shape (N,) giving training labels; y[i] = c means that
-          X[i] has label c, where 0 <= c < C.
+        - y: A numpy array f shape (N,) giving training labels; y[i] = c
+             means that X[i] has label c, where 0 <= c < C.
         - X_val: A numpy array of shape (N_val, D) giving validation data.
         - y_val: A numpy array of shape (N_val,) giving validation labels.
         - learning_rate: Scalar giving learning rate for optimization.
-        - learning_rate_decay: Scalar giving factor used to decay the learning rate
-          after each epoch.
+        - learning_rate_decay: Scalar giving factor used to decay the
+                               learning rate after each epoch.
         - reg: Scalar giving regularization strength.
         - num_iters: Number of steps to take when optimizing.
         - batch_size: Number of training examples to use per step.
@@ -145,7 +167,7 @@ class TwoLayerNet(object):
         train_acc_history = []
         val_acc_history = []
 
-        for it in xrange(num_iters):
+        for it in range(num_iters):
             X_batch = None
             y_batch = None
 
