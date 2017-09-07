@@ -171,29 +171,28 @@ class TwoLayerNet(object):
             X_batch = None
             y_batch = None
 
-            #########################################################################
-            # TODO: Create a random minibatch of training data and labels, storing  #
-            # them in X_batch and y_batch respectively.                             #
-            #########################################################################
-            pass
-            #########################################################################
-            #                             END OF YOUR CODE                          #
-            #########################################################################
+            ###################################################################
+            # TODO: Create a random minibatch of training data and labels,
+            # storing  them in X_batch and y_batch respectively.
+            ###################################################################
+            batch_ind = np.random.choice(num_train, batch_size, replace=True)
+            X_batch = X[batch_ind]
+            y_batch = y[batch_ind]
 
             # Compute loss and gradients using the current minibatch
             loss, grads = self.loss(X_batch, y=y_batch, reg=reg)
             loss_history.append(loss)
 
-            #########################################################################
-            # TODO: Use the gradients in the grads dictionary to update the         #
-            # parameters of the network (stored in the dictionary self.params)      #
-            # using stochastic gradient descent. You'll need to use the gradients   #
-            # stored in the grads dictionary defined above.                         #
-            #########################################################################
-            pass
-            #########################################################################
-            #                             END OF YOUR CODE                          #
-            #########################################################################
+            ###################################################################
+            # TODO: Use the gradients in the grads dictionary to update the
+            # parameters of the network (stored in the dictionary self.params)
+            # using stochastic gradient descent. You'll need to use the
+            # gradients stored in the grads dictionary defined above.
+            ###################################################################
+            self.params['W2'] -= learning_rate * grads['W2']
+            self.params['b2'] -= learning_rate * grads['b2']
+            self.params['W1'] -= learning_rate * grads['W1']
+            self.params['b1'] -= learning_rate * grads['b1']
 
             if verbose and it % 100 == 0:
                 print('iteration %d / %d: loss %f' % (it, num_iters, loss))
@@ -201,8 +200,8 @@ class TwoLayerNet(object):
             # Every epoch, check train and val accuracy and decay learning rate.
             if it % iterations_per_epoch == 0:
                 # Check accuracy
-                train_acc = (self.predict(X_batch) == y_batch).mean()
-                val_acc = (self.predict(X_val) == y_val).mean()
+                train_acc = np.mean(self.predict(X_batch) == y_batch)
+                val_acc = np.mean(self.predict(X_val) == y_val)
                 train_acc_history.append(train_acc)
                 val_acc_history.append(val_acc)
 
@@ -230,14 +229,15 @@ class TwoLayerNet(object):
           the elements of X. For all i, y_pred[i] = c means that X[i] is predicted
           to have class c, where 0 <= c < C.
         """
-        y_pred = None
+        # Unpack variables from the params dictionary
+        W1, b1 = self.params['W1'], self.params['b1']
+        W2, b2 = self.params['W2'], self.params['b2']
+        N, D = X.shape
 
-        ###########################################################################
-        # TODO: Implement this function; it should be VERY simple!                #
-        ###########################################################################
-        pass
-        ###########################################################################
-        #                              END OF YOUR CODE                           #
-        ###########################################################################
+        z1 = np.dot(X, W1) + b1  # NxD * DxH + 1xH = NxH
+        a1 = np.maximum(0, z1)  # NxH
+        z2 = np.dot(a1, W2) + b2  # NxH * HxC + 1xC = NxC
+
+        y_pred = np.argmax(z2, axis=1)
 
         return y_pred
