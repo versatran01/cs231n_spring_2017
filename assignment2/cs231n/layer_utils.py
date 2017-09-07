@@ -1,11 +1,10 @@
-pass
 from cs231n.layers import *
 from cs231n.fast_layers import *
 
 
 def affine_relu_forward(x, w, b):
     """
-    Convenience layer that perorms an affine transform followed by a ReLU
+    Convenience layer that performs an affine transform followed by a ReLU
 
     Inputs:
     - x: Input to the affine layer
@@ -36,7 +35,7 @@ def conv_relu_forward(x, w, b, conv_param):
     A convenience layer that performs a convolution followed by a ReLU.
 
     Inputs:
-    - x: Input to the convolutional layer
+    - x: Input to the convolution layer
     - w, b, conv_param: Weights and parameters for the convolutional layer
 
     Returns a tuple of:
