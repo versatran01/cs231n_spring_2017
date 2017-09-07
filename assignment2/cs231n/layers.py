@@ -1,4 +1,3 @@
-from builtins import range
 import numpy as np
 
 
@@ -25,7 +24,19 @@ def affine_forward(x, w, b):
     # TODO: Implement the affine forward pass. Store the result in out. You   #
     # will need to reshape the input into rows.                               #
     ###########################################################################
-    pass
+    N = x.shape[0]
+    dims_x = x.shape[1:]
+    D = np.prod(dims_x)
+    out = []
+    for i in range(N):
+        x_i = x[i]
+        # reshape x_i to 1xD
+        x_i = np.reshape(x_i, D)  # 1xD
+        z_i = np.dot(x_i, w) + b  # 1xD * DxM = 1xM
+        out.append(z_i)
+
+    out = np.array(out)
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
