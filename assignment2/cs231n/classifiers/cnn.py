@@ -1,4 +1,3 @@
-from builtins import object
 import numpy as np
 
 from cs231n.layers import *
@@ -55,7 +54,6 @@ class ThreeLayerConvNet(object):
 
         for k, v in self.params.items():
             self.params[k] = v.astype(dtype)
-
 
     def loss(self, X, y=None):
         """
