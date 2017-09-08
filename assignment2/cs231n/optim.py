@@ -37,7 +37,9 @@ def sgd(w, dw, config=None):
     config format:
     - learning_rate: Scalar learning rate.
     """
-    if config is None: config = {}
+    if config is None:
+        config = {}
+
     config.setdefault('learning_rate', 1e-2)
 
     w -= config['learning_rate'] * dw
@@ -72,7 +74,6 @@ def sgd_momentum(w, dw, config=None):
     config['velocity'] = v
 
     return next_w, config
-
 
 
 def rmsprop(x, dx, config=None):

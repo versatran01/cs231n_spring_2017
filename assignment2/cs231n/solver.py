@@ -1,11 +1,6 @@
 from __future__ import print_function, division
-from future import standard_library
-standard_library.install_aliases()
-from builtins import range
-from builtins import object
 import os
-import pickle as pickle
-
+import pickle
 import numpy as np
 
 from cs231n import optim
@@ -17,12 +12,12 @@ class Solver(object):
     models. The Solver performs stochastic gradient descent using different
     update rules defined in optim.py.
 
-    The solver accepts both training and validataion data and labels so it can
+    The solver accepts both training and validation data and labels so it can
     periodically check classification accuracy on both training and validation
     data to watch out for overfitting.
 
     To train a model, you will first construct a Solver instance, passing the
-    model, dataset, and various optoins (learning rate, batch size, etc) to the
+    model, dataset, and various options (learning rate, batch size, etc) to the
     constructor. You will then call the train() method to run the optimization
     procedure and train the model.
 
@@ -94,9 +89,9 @@ class Solver(object):
         Optional arguments:
         - update_rule: A string giving the name of an update rule in optim.py.
           Default is 'sgd'.
-        - optim_config: A dictionary containing hyperparameters that will be
+        - optim_config: A dictionary containing hyper-parameters that will be
           passed to the chosen update rule. Each update rule requires different
-          hyperparameters (see optim.py) but all update rules require a
+          hyper-parameters (see optim.py) but all update rules require a
           'learning_rate' parameter so that should always be present.
         - lr_decay: A scalar for learning rate decay; after each epoch the
           learning rate is multiplied by this value.
@@ -146,7 +141,6 @@ class Solver(object):
 
         self._reset()
 
-
     def _reset(self):
         """
         Set up some book-keeping variables for optimization. Don't call this
@@ -165,7 +159,6 @@ class Solver(object):
         for p in self.model.params:
             d = {k: v for k, v in self.optim_config.items()}
             self.optim_configs[p] = d
-
 
     def _step(self):
         """
@@ -190,28 +183,26 @@ class Solver(object):
             self.model.params[p] = next_w
             self.optim_configs[p] = next_config
 
-
     def _save_checkpoint(self):
         if self.checkpoint_name is None: return
         checkpoint = {
-          'model': self.model,
-          'update_rule': self.update_rule,
-          'lr_decay': self.lr_decay,
-          'optim_config': self.optim_config,
-          'batch_size': self.batch_size,
-          'num_train_samples': self.num_train_samples,
-          'num_val_samples': self.num_val_samples,
-          'epoch': self.epoch,
-          'loss_history': self.loss_history,
-          'train_acc_history': self.train_acc_history,
-          'val_acc_history': self.val_acc_history,
+            'model': self.model,
+            'update_rule': self.update_rule,
+            'lr_decay': self.lr_decay,
+            'optim_config': self.optim_config,
+            'batch_size': self.batch_size,
+            'num_train_samples': self.num_train_samples,
+            'num_val_samples': self.num_val_samples,
+            'epoch': self.epoch,
+            'loss_history': self.loss_history,
+            'train_acc_history': self.train_acc_history,
+            'val_acc_history': self.val_acc_history,
         }
         filename = '%s_epoch_%d.pkl' % (self.checkpoint_name, self.epoch)
         if self.verbose:
             print('Saving checkpoint to "%s"' % filename)
         with open(filename, 'wb') as f:
             pickle.dump(checkpoint, f)
-
 
     def check_accuracy(self, X, y, num_samples=None, batch_size=100):
         """
@@ -221,7 +212,7 @@ class Solver(object):
         - X: Array of data, of shape (N, d_1, ..., d_k)
         - y: Array of labels, of shape (N,)
         - num_samples: If not None, subsample the data and only test the model
-          on num_samples datapoints.
+          on num_samples data points.
         - batch_size: Split X and y into batches of this size to avoid using
           too much memory.
 
@@ -253,7 +244,6 @@ class Solver(object):
 
         return acc
 
-
     def train(self):
         """
         Run optimization to train the model.
@@ -268,7 +258,7 @@ class Solver(object):
             # Maybe print training loss
             if self.verbose and t % self.print_every == 0:
                 print('(Iteration %d / %d) loss: %f' % (
-                       t + 1, num_iterations, self.loss_history[-1]))
+                    t + 1, num_iterations, self.loss_history[-1]))
 
             # At the end of every epoch, increment the epoch counter and decay
             # the learning rate.
@@ -284,16 +274,16 @@ class Solver(object):
             last_it = (t == num_iterations - 1)
             if first_it or last_it or epoch_end:
                 train_acc = self.check_accuracy(self.X_train, self.y_train,
-                    num_samples=self.num_train_samples)
+                                                num_samples=self.num_train_samples)
                 val_acc = self.check_accuracy(self.X_val, self.y_val,
-                    num_samples=self.num_val_samples)
+                                              num_samples=self.num_val_samples)
                 self.train_acc_history.append(train_acc)
                 self.val_acc_history.append(val_acc)
                 self._save_checkpoint()
 
                 if self.verbose:
                     print('(Epoch %d / %d) train acc: %f; val_acc: %f' % (
-                           self.epoch, self.num_epochs, train_acc, val_acc))
+                        self.epoch, self.num_epochs, train_acc, val_acc))
 
                 # Keep track of the best model
                 if val_acc > self.best_val_acc:
