@@ -1,5 +1,5 @@
-from __future__ import print_function
 import numpy as np
+
 try:
     from cs231n.im2col_cython import col2im_cython, im2col_cython
     from cs231n.im2col_cython import col2im_6d_cython
@@ -46,8 +46,8 @@ def conv_forward_strides(x, w, b, conv_param):
     stride, pad = conv_param['stride'], conv_param['pad']
 
     # Check dimensions
-    #assert (W + 2 * pad - WW) % stride == 0, 'width does not work'
-    #assert (H + 2 * pad - HH) % stride == 0, 'height does not work'
+    # assert (W + 2 * pad - WW) % stride == 0, 'width does not work'
+    # assert (H + 2 * pad - HH) % stride == 0, 'height does not work'
 
     # Pad the input
     p = pad
@@ -64,7 +64,7 @@ def conv_forward_strides(x, w, b, conv_param):
     strides = (H * W, W, 1, C * H * W, stride * W, stride)
     strides = x.itemsize * np.array(strides)
     x_stride = np.lib.stride_tricks.as_strided(x_padded,
-                  shape=shape, strides=strides)
+                                               shape=shape, strides=strides)
     x_cols = np.ascontiguousarray(x_stride)
     x_cols.shape = (C * HH * WW, N * out_h * out_w)
 
@@ -140,7 +140,8 @@ def max_pool_forward_fast(x, pool_param):
     is not much faster than the naive method.
     """
     N, C, H, W = x.shape
-    pool_height, pool_width = pool_param['pool_height'], pool_param['pool_width']
+    pool_height, pool_width = pool_param['pool_height'], pool_param[
+        'pool_width']
     stride = pool_param['stride']
 
     same_size = pool_height == pool_width == stride
@@ -178,7 +179,8 @@ def max_pool_forward_reshape(x, pool_param):
     This can only be used for square pooling regions that tile the input.
     """
     N, C, H, W = x.shape
-    pool_height, pool_width = pool_param['pool_height'], pool_param['pool_width']
+    pool_height, pool_width = pool_param['pool_height'], pool_param[
+        'pool_width']
     stride = pool_param['stride']
     assert pool_height == pool_width == stride, 'Invalid pool params'
     assert H % pool_height == 0
@@ -230,7 +232,8 @@ def max_pool_forward_im2col(x, pool_param):
     possible.
     """
     N, C, H, W = x.shape
-    pool_height, pool_width = pool_param['pool_height'], pool_param['pool_width']
+    pool_height, pool_width = pool_param['pool_height'], pool_param[
+        'pool_width']
     stride = pool_param['stride']
 
     assert (H - pool_height) % stride == 0, 'Invalid height'
@@ -258,14 +261,15 @@ def max_pool_backward_im2col(dout, cache):
     """
     x, x_cols, x_cols_argmax, pool_param = cache
     N, C, H, W = x.shape
-    pool_height, pool_width = pool_param['pool_height'], pool_param['pool_width']
+    pool_height, pool_width = pool_param['pool_height'], pool_param[
+        'pool_width']
     stride = pool_param['stride']
 
     dout_reshaped = dout.transpose(2, 3, 0, 1).flatten()
     dx_cols = np.zeros_like(x_cols)
     dx_cols[x_cols_argmax, np.arange(dx_cols.shape[1])] = dout_reshaped
     dx = col2im_indices(dx_cols, (N * C, 1, H, W), pool_height, pool_width,
-                padding=0, stride=stride)
+                        padding=0, stride=stride)
     dx = dx.reshape(x.shape)
 
     return dx

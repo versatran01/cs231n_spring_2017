@@ -5,6 +5,7 @@ import h5py
 
 BASE_DIR = 'cs231n/datasets/coco_captioning'
 
+
 def load_coco_data(base_dir=BASE_DIR,
                    max_train=None,
                    pca_features=True):

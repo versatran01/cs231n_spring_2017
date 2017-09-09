@@ -1,5 +1,3 @@
-from builtins import range
-from builtins import object
 import numpy as np
 
 from cs231n.layers import *
@@ -74,7 +72,6 @@ class CaptioningRNN(object):
         for k, v in self.params.items():
             self.params[k] = v.astype(self.dtype)
 
-
     def loss(self, features, captions):
         """
         Compute training-time loss for the RNN. We input image features and
@@ -143,7 +140,6 @@ class CaptioningRNN(object):
         ############################################################################
 
         return loss, grads
-
 
     def sample(self, features, max_length=30):
         """
