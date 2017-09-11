@@ -425,10 +425,41 @@ def conv_forward_naive(x, w, b, conv_param):
     """
     out = None
     ###########################################################################
-    # TODO: Implement the convolutional forward pass.                         #
+    # TODO: Implement the convolutional forward pass.
+    #    #
     # Hint: you can use the function np.pad for padding.                      #
     ###########################################################################
-    pass
+    pad = conv_param['pad']
+    stride = conv_param['stride']
+    N, C, H, W = np.shape(x)
+    F, _, HH, WW = np.shape(w)
+
+    # compute output shape
+    h_out = 1 + (H + 2 * pad - HH) / stride
+    w_out = 1 + (W + 2 * pad - WW) / stride
+
+    h_out = int(h_out)
+    w_out = int(w_out)
+
+    # only pad H and W axes
+    x_pad = np.pad(x, ((0,), (0,), (pad,), (pad,)), 'constant')
+
+    # pre-allocate output
+    out = np.empty((N, F, h_out, w_out), dtype=x.dtype)
+
+    for n in range(N):  # each image
+        image = x_pad[n, :, :, :]  # get padded image
+        for f in range(F):  # each filter
+            bias = b[f]  # get bias
+            kernel = w[f]  # get kernel
+            out_image = out[n, f, :, :]
+            for r in range(h_out):
+                for c in range(w_out):
+                    win_r = r * stride
+                    win_c = c * stride
+                    win = image[:, win_r:win_r + HH, win_c:win_c + WW]
+                    out_image[r, c] = np.sum(win * kernel) + bias
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
