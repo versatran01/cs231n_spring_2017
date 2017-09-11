@@ -247,14 +247,46 @@ def batchnorm_backward(dout, cache):
     # results in the dx, dgamma, and dbeta variables.                         #
     ###########################################################################
     gamma, x, mean, var, eps, x_hat = cache
+    N, D = x.shape
 
     # backprop y = gamma * x_hat + beta
     dgamma = np.sum(dout * x_hat, axis=0)
     dbeta = np.sum(dout, axis=0)
     dx_hat = gamma * dout
+    var_eps = var + eps
+    sqrt_var_eps = np.sqrt(var_eps)
+    inv_sqrt_var_eps = 1 / sqrt_var_eps
+    x_bar = x - mean
 
-    # backprop x_hat = (x - u) / sqrt(s + e)
+    # backprop x_hat = (x - u) / sqrt(s + e) = x_bar * inv_sqrt_var_eps
+    dx_bar1 = dx_hat * inv_sqrt_var_eps
+    dinv_sqrt_var_eps = np.sum(dx_hat * x_bar, axis=0)
 
+    # backprop inv_sqrt_var_eps = 1 / sqrt_var_eps
+    dsqrt_var_eps = -dinv_sqrt_var_eps / var_eps
+
+    # backprop sqrt_var_eps = np.sqrt(var_eps)
+    dvar_eps = 0.5 * var_eps ** (-0.5) * dsqrt_var_eps
+
+    # backprop var_eps = var + eps
+    # dvar = dvar_eps
+    # deps = dvar_eps
+
+    # backprop var = 1/N * sum_i(x_bar)
+    dx_bar_sq = 1 / N * np.ones((N, D)) * dvar_eps  # dvar_eps = dvar
+
+    # backprop x_bar_sq = x_bar ** 2
+    dx_bar2 = 2 * x_bar * dx_bar_sq
+
+    # backprop x_bar = x - u
+    dx1 = dx_bar1 + dx_bar2
+    du = -np.sum(dx1, axis=0)
+
+    # backprop u = 1/N * sum_i(x)
+    dx2 = 1 / N * np.ones((N, D)) * du
+
+    # backprop input
+    dx = dx1 + dx2
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
