@@ -22,8 +22,8 @@ class CaptioningRNN(object):
         Construct a new CaptioningRNN instance.
 
         Inputs:
-        - word_to_idx: A dictionary giving the vocabulary. It contains V entries,
-          and maps each string to a unique integer in the range [0, V).
+        - word_to_idx: A dictionary giving the vocabulary. It contains V
+          entries, and maps each string to a unique integer in the range [0, V).
         - input_dim: Dimension D of input image feature vectors.
         - wordvec_dim: Dimension W of word vectors.
         - hidden_dim: Dimension H for the hidden state of the RNN.

@@ -1,5 +1,5 @@
-from builtins import range
-import os, json
+import os
+import json
 import numpy as np
 import h5py
 
