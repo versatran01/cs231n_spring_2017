@@ -190,6 +190,9 @@ class FullyConnectedNet(object):
             n = i + 1
             self.set_W(n, weight_scale * np.random.randn(dim_in, dim_out))
             self.set_b(n, np.zeros(dim_out))
+            if self.use_batchnorm:
+                self.set_gamma(n, np.ones(dim_out))
+                self.set_beta(n, np.zeros(dim_out))
             dim_in = dim_out
 
         dim_out = num_classes
@@ -237,6 +240,18 @@ class FullyConnectedNet(object):
     def set_b(self, i, b):
         self.params[_make_key('b', i)] = b
 
+    def gamma(self, i):
+        return self.params[_make_key('gamma', i)]
+
+    def beta(self, i):
+        return self.params[_make_key('beta', i)]
+
+    def set_gamma(self, i, gamma):
+        self.params[_make_key('gamma', i)] = gamma
+
+    def set_beta(self, i, beta):
+        self.params[_make_key('beta', i)] = beta
+
     def loss(self, X, y=None):
         """
         Compute loss and gradient for the fully-connected net.
@@ -275,7 +290,16 @@ class FullyConnectedNet(object):
         for i in range(1, n):
             Wi = self.W(i)
             bi = self.b(i)
-            z, cache = affine_relu_forward(x, Wi, bi)
+
+            if self.use_batchnorm:
+                gammai = self.gamma(i)
+                betai = self.beta(i)
+                z, cache = affine_bn_relu_forward(x, Wi, bi, gammai, betai,
+                                                  self.bn_params[i - 1])
+            else:
+                z, cache = affine_relu_forward(x, Wi, bi)
+
+            # update
             x = z
             ar_cache[i] = cache
 
@@ -329,8 +353,15 @@ class FullyConnectedNet(object):
             # add reg to loss
             loss += 0.5 * self.reg * np.sum(Wi * Wi)
 
-            # backprop affine relu layer
-            dx, dw, db = affine_relu_backward(dz, ar_cache[i])
+            if self.use_batchnorm:
+                # backprop affine bn relu layer
+                dx, dw, db, dgamma, dbeta = affine_bn_relu_backward(dz,
+                                                                    ar_cache[i])
+                grads[_make_key('gamma', i)] = dgamma
+                grads[_make_key('beta', i)] = dbeta
+            else:
+                # backprop affine relu layer
+                dx, dw, db = affine_relu_backward(dz, ar_cache[i])
 
             # update grads
             dw += self.reg * Wi
@@ -349,3 +380,19 @@ class FullyConnectedNet(object):
 
 def _make_key(p, i):
     return p + str(i)
+
+
+def affine_bn_relu_forward(x, w, b, gamma, beta, bn_param):
+    af_out, af_cache = affine_forward(x, w, b)
+    bn_out, bn_cache = batchnorm_forward(af_out, gamma, beta, bn_param)
+    rl_out, rl_cache = relu_forward(bn_out)
+    cache = (af_cache, bn_cache, rl_cache)
+    return rl_out, cache
+
+
+def affine_bn_relu_backward(dout, cache):
+    af_cache, bn_cache, rl_cache = cache
+    dbn = relu_backward(dout, rl_cache)
+    da, dgamma, dbeta = batchnorm_backward(dbn, bn_cache)
+    dx, dw, db = affine_backward(da, af_cache)
+    return dx, dw, db, dgamma, dbeta
