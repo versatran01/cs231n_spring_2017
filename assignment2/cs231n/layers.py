@@ -429,24 +429,25 @@ def conv_forward_naive(x, w, b, conv_param):
     #    #
     # Hint: you can use the function np.pad for padding.                      #
     ###########################################################################
-    pad = conv_param['pad']
-    stride = conv_param['stride']
+    p = conv_param['pad']
+    s = conv_param['stride']
     N, C, H, W = np.shape(x)
     F, _, HH, WW = np.shape(w)
 
     # compute output shape
-    h_out = 1 + (H + 2 * pad - HH) / stride
-    w_out = 1 + (W + 2 * pad - WW) / stride
+    h_out = 1 + (H + 2 * p - HH) / s
+    w_out = 1 + (W + 2 * p - WW) / s
 
     h_out = int(h_out)
     w_out = int(w_out)
 
     # only pad H and W axes
-    x_pad = np.pad(x, ((0,), (0,), (pad,), (pad,)), 'constant')
+    x_pad = np.pad(x, ((0,), (0,), (p,), (p,)), 'constant')
 
     # pre-allocate output
     out = np.empty((N, F, h_out, w_out), dtype=x.dtype)
 
+    # naive convolution implementation
     for n in range(N):  # each image
         image = x_pad[n, :, :, :]  # get padded image
         for f in range(F):  # each filter
@@ -455,8 +456,8 @@ def conv_forward_naive(x, w, b, conv_param):
             out_image = out[n, f, :, :]
             for r in range(h_out):
                 for c in range(w_out):
-                    win_r = r * stride
-                    win_c = c * stride
+                    win_r = r * s
+                    win_c = c * s
                     win = image[:, win_r:win_r + HH, win_c:win_c + WW]
                     out_image[r, c] = np.sum(win * kernel) + bias
 
@@ -510,7 +511,31 @@ def max_pool_forward_naive(x, pool_param):
     ###########################################################################
     # TODO: Implement the max pooling forward pass                            #
     ###########################################################################
-    pass
+    h = pool_param['pool_height']
+    w = pool_param['pool_width']
+    s = pool_param['stride']
+
+    N, C, H, W = np.shape(x)
+    h_out = (H - h) / s + 1
+    w_out = (W - w) / s + 1
+
+    h_out = int(h_out)
+    w_out = int(w_out)
+
+    # pre-allocate memory
+    out = np.empty((N, C, h_out, w_out), dtype=x.dtype)
+
+    for n in range(N):  # for each image
+        for c in range(C):  # for each channel
+            channel = x[n, c, :, :]
+            out_channel = out[n, c, :, :]
+            for r in range(h_out):
+                for c in range(w_out):
+                    win_r = r * s
+                    win_c = c * s
+                    out_channel[r, c] = np.max(
+                        channel[win_r:win_r + h, win_c:win_c + w])
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
