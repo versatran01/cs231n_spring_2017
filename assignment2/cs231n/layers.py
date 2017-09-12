@@ -316,7 +316,17 @@ def batchnorm_backward_alt(dout, cache):
     # should be able to compute gradients with respect to the inputs in a     #
     # single statement; our implementation fits on a single 80-character line.#
     ###########################################################################
-    pass
+    gamma, x, mean, var, eps, x_hat = cache
+    N = x.shape[0]
+    dx_hat = dout * gamma
+    dvar = np.sum(dx_hat * (x - mean) * -0.5 * np.power(var + eps, -1.5),
+                  axis=0)
+    dmean = np.sum(dx_hat * -1 / np.sqrt(var + eps), axis=0) + dvar * np.mean(
+        -2 * (x - mean), axis=0)
+    dx = 1 / np.sqrt(var + eps) * dx_hat + \
+         dvar * 2.0 / N * (x - mean) + 1.0 / N * dmean
+    dgamma = np.sum(x_hat * dout, axis=0)
+    dbeta = np.sum(dout, axis=0)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -485,7 +495,47 @@ def conv_backward_naive(dout, cache):
     ###########################################################################
     # TODO: Implement the convolutional backward pass.                        #
     ###########################################################################
-    pass
+    x, w, b, conv_param = cache
+    P = conv_param['pad']
+    S = conv_param['stride']
+
+    # pad image
+    x_pad = np.pad(x, ((0,), (0,), (P,), (P,)), 'constant')
+
+    N, C, Hx, Wx = np.shape(x)
+    F, _, Hw, Ww = np.shape(w)
+    _, _, Hz, Wz = np.shape(dout)
+
+    dw = np.zeros_like(w)
+    for f in range(F):
+        for c in range(C):
+            channel = x_pad[:, c, :, :]
+            for i in range(Hw):
+                for j in range(Hw):
+                    win = channel[:, i:i + Hz * S:S, j:j + Wz * S:S]
+                    dw[f, c, i, j] = np.sum(dout[:, f, :, :] * win)
+
+    db = np.zeros_like(b)
+    for f in range(F):
+        db[f] = np.sum(dout[:, f, :, :])
+
+    # have no idea how this is done
+    dx = np.zeros_like(x)
+    for n in range(N):
+        for i in range(Hx):
+            for j in range(Wx):
+                for f in range(F):
+                    for k in range(Hz):
+                        for l in range(Wz):
+                            mask1 = np.zeros_like(w[f, :, :, :])
+                            mask2 = np.zeros_like(w[f, :, :, :])
+                            if Hw > (i + P - k * S) >= 0:
+                                mask1[:, i + P - k * S, :] = 1.0
+                            if Ww > (j + P - l * S) >= 0:
+                                mask2[:, :, j + P - l * S] = 1.0
+                            w_masked = np.sum(w[f, :, :, :] * mask1 * mask2,
+                                              axis=(1, 2))
+                            dx[n, :, i, j] += dout[n, f, k, l] * w_masked
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -558,7 +608,30 @@ def max_pool_backward_naive(dout, cache):
     ###########################################################################
     # TODO: Implement the max pooling backward pass                           #
     ###########################################################################
-    pass
+    x, pool_param = cache
+    h = pool_param['pool_height']
+    w = pool_param['pool_width']
+    s = pool_param['stride']
+    N, C, H, W = np.shape(x)
+    h_out = (H - h) / s + 1
+    w_out = (W - w) / s + 1
+    h_out = int(h_out)
+    w_out = int(w_out)
+
+    # Also no idea what's going on
+    dx = np.zeros((N, C, H, W))
+    for n in range(N):
+        for c in range(C):
+            dx_channel = dx[n, c, :, :]
+            dout_channel = dout[n, c, :, :]
+            for k in range(h_out):
+                for l in range(w_out):
+                    x_pooling = x[n, c, k * s:k * s + h, l * s:l * s + w]
+                    maxi = np.max(x_pooling)
+                    x_mask = x_pooling == maxi
+                    K = k * s
+                    L = l * s
+                    dx_channel[K:K + h, L:L + w] += dout_channel[k, l] * x_mask
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -596,7 +669,10 @@ def spatial_batchnorm_forward(x, gamma, beta, bn_param):
     # version of batch normalization defined above. Your implementation should#
     # be very short; ours is less than five lines.                            #
     ###########################################################################
-    pass
+    N, C, H, W = np.shape(x)
+    x1 = x.transpose(0, 3, 2, 1).reshape(N * H * W, C)
+    bn_out, cache = batchnorm_forward(x1, gamma, beta, bn_param)
+    out = bn_out.reshape(N, W, H, C).transpose(0, 3, 2, 1)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -626,7 +702,13 @@ def spatial_batchnorm_backward(dout, cache):
     # version of batch normalization defined above. Your implementation should#
     # be very short; ours is less than five lines.                            #
     ###########################################################################
-    pass
+    N, C, H, W = np.shape(dout)
+    axes = (0, 3, 2, 1)
+    shape = (N * H * W, C)
+    dout1 = np.reshape(np.transpose(dout, axes), shape)
+    dx, dgamma, dbeta = batchnorm_backward_alt(dout1, cache)
+    dx = np.reshape(dx, (N, W, H, C))
+    dx = np.transpose(dx, axes)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
