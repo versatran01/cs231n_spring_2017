@@ -75,24 +75,25 @@ class CaptioningRNN(object):
     def loss(self, features, captions):
         """
         Compute training-time loss for the RNN. We input image features and
-        ground-truth captions for those images, and use an RNN (or LSTM) to compute
-        loss and gradients on all parameters.
+        ground-truth captions for those images, and use an RNN (or LSTM) to
+        compute loss and gradients on all parameters.
 
         Inputs:
         - features: Input image features, of shape (N, D)
-        - captions: Ground-truth captions; an integer array of shape (N, T) where
-          each element is in the range 0 <= y[i, t] < V
+        - captions: Ground-truth captions; an integer array of shape (N, T)
+          where each element is in the range 0 <= y[i, t] < V
 
         Returns a tuple of:
         - loss: Scalar loss
         - grads: Dictionary of gradients parallel to self.params
         """
-        # Cut captions into two pieces: captions_in has everything but the last word
-        # and will be input to the RNN; captions_out has everything but the first
-        # word and this is what we will expect the RNN to generate. These are offset
-        # by one relative to each other because the RNN should produce word (t+1)
-        # after receiving word t. The first element of captions_in will be the START
-        # token, and the first element of captions_out will be the first word.
+        # Cut captions into two pieces: captions_in has everything but the
+        # last word and will be input to the RNN; captions_out has everything
+        #  but the first word and this is what we will expect the RNN to
+        # generate. These are offset by one relative to each other because
+        # the RNN should produce word (t+1) after receiving word t. The first
+        #  element of captions_in will be the START token, and the first
+        # element of captions_out will be the first word.
         captions_in = captions[:, :-1]
         captions_out = captions[:, 1:]
 
@@ -196,7 +197,7 @@ class CaptioningRNN(object):
         # a loop.                                                                 #
         ###########################################################################
         pass
-        ############################################################################
-        #                             END OF YOUR CODE                             #
-        ############################################################################
+        ########################################################################
+        #                             END OF YOUR CODE                         #
+        ########################################################################
         return captions
