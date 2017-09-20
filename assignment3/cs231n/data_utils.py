@@ -1,4 +1,3 @@
-from __future__ import print_function
 import pickle
 import numpy as np
 import os
@@ -136,12 +135,12 @@ def load_tiny_imagenet(path, dtype=np.float32, subtract_mean=True):
 
         X_train_block = np.zeros((num_images, 3, 64, 64), dtype=dtype)
         y_train_block = wnid_to_label[wnid] * \
-                        np.ones(num_images, dtype=np.int64)
+            np.ones(num_images, dtype=np.int64)
         for j, img_file in enumerate(filenames):
             img_file = os.path.join(path, 'train', wnid, 'images', img_file)
             img = imread(img_file)
             if img.ndim == 2:
-                ## grayscale file
+                # grayscale file
                 img.shape = (64, 64, 1)
             X_train_block[j] = img.transpose(2, 0, 1)
         X_train.append(X_train_block)

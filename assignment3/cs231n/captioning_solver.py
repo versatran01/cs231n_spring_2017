@@ -23,8 +23,9 @@ class CaptioningSolver(object):
     that performed best on the validation set over the course of training.
     In addition, the instance variable solver.loss_history will contain a list
     of all losses encountered during training and the instance variables
-    solver.train_acc_history and solver.val_acc_history will be lists containing
-    the accuracies of the model on the training and validation set at each epoch.
+    solver.train_acc_history and solver.val_acc_history will be lists
+    containing the accuracies of the model on the training and validation set
+    at each epoch.
 
     Example usage might look something like this:
 
@@ -41,8 +42,8 @@ class CaptioningSolver(object):
     solver.train()
 
 
-    A CaptioningSolver works on a model object that must conform to the following
-    API:
+    A CaptioningSolver works on a model object that must conform to the
+    following API:
 
     - model.params must be a dictionary mapping string parameter names to numpy
       arrays containing parameter values.
@@ -51,7 +52,8 @@ class CaptioningSolver(object):
       training-time loss and gradients, with the following inputs and outputs:
 
       Inputs:
-      - features: Array giving a minibatch of features for images, of shape (N, D
+      - features: Array giving a minibatch of features for images, of shape
+        (N, D)
       - captions: Array of captions for those images, of shape (N, T) where
         each element is in the range (0, V].
 
@@ -67,7 +69,8 @@ class CaptioningSolver(object):
 
         Required arguments:
         - model: A model object conforming to the API described above
-        - data: A dictionary of training and validation data from load_coco_data
+        - data: A dictionary of training and validation data from
+          load_coco_data
 
         Optional arguments:
         - update_rule: A string giving the name of an update rule in optim.py.
@@ -76,15 +79,15 @@ class CaptioningSolver(object):
           passed to the chosen update rule. Each update rule requires different
           hyperparameters (see optim.py) but all update rules require a
           'learning_rate' parameter so that should always be present.
-        - lr_decay: A scalar for learning rate decay; after each epoch the learning
-          rate is multiplied by this value.
-        - batch_size: Size of minibatches used to compute loss and gradient during
-          training.
+        - lr_decay: A scalar for learning rate decay; after each epoch the
+          learning rate is multiplied by this value.
+        - batch_size: Size of minibatches used to compute loss and gradient
+          during training.
         - num_epochs: The number of epochs to run for during training.
-        - print_every: Integer; training losses will be printed every print_every
-          iterations.
-        - verbose: Boolean; if set to false then no output will be printed during
-          training.
+        - print_every: Integer; training losses will be printed every
+          print_every iterations.
+        - verbose: Boolean; if set to false then no output will be printed
+          during training.
         """
         self.model = model
         self.data = data
@@ -164,8 +167,8 @@ class CaptioningSolver(object):
         - y: Array of labels, of shape (N,)
         - num_samples: If not None, subsample the data and only test the model
           on num_samples datapoints.
-        - batch_size: Split X and y into batches of this size to avoid using too
-          much memory.
+        - batch_size: Split X and y into batches of this size to avoid using
+          too much memory.
 
         Returns:
         - acc: Scalar giving the fraction of instances that were correctly
@@ -212,17 +215,18 @@ class CaptioningSolver(object):
                 print('(Iteration %d / %d) loss: %f' % (
                     t + 1, num_iterations, self.loss_history[-1]))
 
-            # At the end of every epoch, increment the epoch counter and decay the
-            # learning rate.
+            # At the end of every epoch, increment the epoch counter and decay
+            # the learning rate.
             epoch_end = (t + 1) % iterations_per_epoch == 0
             if epoch_end:
                 self.epoch += 1
                 for k in self.optim_configs:
                     self.optim_configs[k]['learning_rate'] *= self.lr_decay
 
-                    # Check train and val accuracy on the first iteration, the last
-                    # iteration, and at the end of each epoch.
-                    # TODO: Implement some logic to check Bleu on validation set periodically
+                    # Check train and val accuracy on the first iteration, the
+                    # last iteration, and at the end of each epoch.
+                    # TODO: Implement some logic to check Bleu on validation
+                    # set periodically
 
-                    # At the end of training swap the best params into the model
-                    # self.model.params = self.best_params
+                    # At the end of training swap the best params into the
+                    # model self.model.params = self.best_params
