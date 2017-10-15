@@ -149,7 +149,7 @@ class CaptioningRNN(object):
         if self.cell_type == 'rnn':
             h, cache_rnn = rnn_forward(x, h0, Wx, Wh, b)
         elif self.cell_type == 'lstm':
-            pass
+            h, cache_lstm = lstm_forward(x, h0, Wx, Wh, b)
         else:
             raise ValueError('%s not implemented' % self.cell_type)
 
@@ -169,7 +169,7 @@ class CaptioningRNN(object):
         if self.cell_type == 'rnn':
             dx, dh0, dWx, dWh, db = rnn_backward(dh, cache_rnn)
         elif self.cell_type == 'lstm':
-            pass
+            dx, dh0, dWx, dWh, db = lstm_backward(dh, cache_lstm)
         else:
             raise ValueError('%s not implemented' % self.cell_type)
 
@@ -254,19 +254,21 @@ class CaptioningRNN(object):
 
         captions[:, 0] = self._start
         # previous hidden state
-        h_prev = h0
+        prev_h = h0
+        prev_c = np.zeros_like(h0)
         # current word
         x_curr = self._start * np.ones((N, 1), dtype=np.int32)
 
         for t in range(max_length):
             # Nx1xD = (Nx1, VxD)
             x_embed, _ = word_embedding_forward(x_curr, W_embed)
+            x_embed = x_embed.squeeze()
 
             if self.cell_type == 'rnn':
                 # (NxH) = (NxD)
-                h, _ = rnn_step_forward(np.squeeze(x_embed), h_prev, Wx, Wh, b)
+                h, _ = rnn_step_forward(x_embed, prev_h, Wx, Wh, b)
             elif self.cell_type == 'lstm':
-                pass
+                h, c, _ = lstm_step_forward(x_embed, prev_h, prev_c, Wx, Wh, b)
             else:
                 raise ValueError('%s not implemented' % self.cell_type)
 
@@ -278,7 +280,9 @@ class CaptioningRNN(object):
             captions[:, t] = idx_best
 
             # update hidden
-            h_prev = h
+            prev_h = h
+            if self.cell_type == 'lstm':
+                prev_c = c
 
             x_curr = captions[:, t]
         ########################################################################
